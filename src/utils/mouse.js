@@ -2,6 +2,7 @@
 export default class Mouse {
   constructor(element) {
     this.element = element || window;
+    this.drag = false;
     this.x =
       ~~(document.documentElement.clientWidth, window.innerWidth || 0) / 2;
     this.y =
@@ -11,6 +12,12 @@ export default class Mouse {
     this.events = ["mouseenter", "mousemove"];
     this.events.forEach(eventName => {
       this.element.addEventListener(eventName, this.getCoordinates);
+    });
+    this.element.addEventListener("mousedown", () => {
+      this.drag = true;
+    });
+    this.element.addEventListener("mouseup", () => {
+      this.drag = false;
     });
   }
   reset = () => {
@@ -23,8 +30,10 @@ export default class Mouse {
     event.preventDefault();
     const x = event.pageX;
     const y = event.pageY;
-    this.x = x;
-    this.y = y;
+    if (this.drag) {
+      this.x = x;
+      this.y = y;
+    }
   }
   pointer() {
     return {

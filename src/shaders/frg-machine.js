@@ -5,6 +5,7 @@ out vec4 fragColor;
 uniform vec2 resolution;
 uniform float time;
 uniform vec4 mouse;
+uniform float zoom;
 
 #define MAX_STEPS 	100
 #define MAX_DIST	150.
@@ -32,10 +33,35 @@ float goldNoise(vec2 coord, float seed) {
   return temp;
 }
 
-vec2 rotate(vec2 p, float t) {
-  	return p * cos(t) + vec2(p.y, -p.x) * sin(t);
+vec3 rotateX(vec3 x, float an) {
+    float c = cos(an); float s = sin(an);
+    return vec3(x.x, x.y * c - x.z * s, x.z * c + x.y * s);
 }
 
+vec3 rotateY(vec3 x, float an) {
+    float c = cos(an); float s = sin(an);
+    return vec3(x.x * c - x.z * s, x.y, x.z * c + x.x * s);
+}
+
+vec3 rotateZ(vec3 x, float an) {
+    float c = cos(an); float s = sin(an);
+    return vec3(x.x * c - x.y * s, x.y * c + x.x * s, x.z);
+}
+
+// handy mouse pos function - take in a vec3 like ro
+// simple pan and tilt and return that vec3
+vec3 get_mouse(vec3 ro) {
+    float x = (mouse.y / resolution.y * 1.0 - 0.5) * PI;
+    float y = -(mouse.x / resolution.x * 2.0 - 1.0) * PI;
+    float z = 0.0;
+    //vec3 mouse = vec3(x,y,z);
+	ro = rotateZ(ro, z);   
+    ro = rotateX(ro, x);
+    ro = rotateY(ro, y);
+
+    return ro;
+}
+  
 float sdBox(vec3 p,vec3 s) {
     p = abs(p) - s;
     return max(max(p.x,p.y),p.z);
@@ -43,12 +69,6 @@ float sdBox(vec3 p,vec3 s) {
 
 float sdSphere(vec3 p, float r) {
     return length(p)-r;    
-}
-
-vec2 get_mouse(void) {
-    float ax = 10.*mouse.x/resolution.x;
-    float ay = 10.*mouse.y/resolution.y;  
-    return (mouse.xy==vec2(0)) ? vec2(0.3,0.0) : vec2(ax,ay);
 }
 
 float map(vec3 pos) {
@@ -168,19 +188,12 @@ void main( ) {
 	#else    
     uv = (2. * gl_FragCoord.xy - resolution.xy )/resolution.y;
 	#endif
-  
-    vec2 mouse = get_mouse();
+
 	  float ftime = time * 5.5;
     float ftm = .5 + .5 * sin(time*.1);
     
-    vec3 ta = vec3(0.01,0.,0.);
-    vec3 ro = vec3(0.01,0.,-7.);
-
-    ro.xz = rotate(ro.xz, ftm+abs(mouse.x));
-    ta.xz = rotate(ta.xz, ftm+abs(mouse.x));
-
-    ro.yz = rotate(ro.yz, abs(mouse.y));
-    ta.yz = rotate(ta.yz, abs(mouse.y));
+    vec3 ta = vec3(0.0,0.0,0.);
+    vec3 ro = get_mouse(vec3(0.0,0.0,-7.));
     
     mat3 cameraMatrix = get_camera(ro, ta, 0. );
     vec3 rd = cameraMatrix * normalize( vec3(uv.xy, .85) );
