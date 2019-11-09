@@ -33,32 +33,23 @@ float goldNoise(vec2 coord, float seed) {
   return temp;
 }
 
-vec3 rotateX(vec3 x, float an) {
-    float c = cos(an); float s = sin(an);
-    return vec3(x.x, x.y * c - x.z * s, x.z * c + x.y * s);
+// Single rotation function - return matrix
+mat2 r2(float a){ 
+  return mat2(cos(a), sin(a), -sin(a), cos(a)); 
 }
 
-vec3 rotateY(vec3 x, float an) {
-    float c = cos(an); float s = sin(an);
-    return vec3(x.x * c - x.z * s, x.y, x.z * c + x.x * s);
-}
-
-vec3 rotateZ(vec3 x, float an) {
-    float c = cos(an); float s = sin(an);
-    return vec3(x.x * c - x.y * s, x.y * c + x.x * s, x.z);
-}
-
-// handy mouse pos function - take in a vec3 like ro
+// mouse pos function - take in a vec3 like ro
 // simple pan and tilt and return that vec3
 vec3 get_mouse(vec3 ro) {
-    float x = (mouse.y / resolution.y * 1.0 - 0.5) * PI;
-    float y = -(mouse.x / resolution.x * 2.0 - 1.0) * PI;
+    float x = mouse.xy==vec2(0) ? -.2 :
+    	(mouse.y / resolution.y * .5 - 0.25) * PI;
+    float y = mouse.xy==vec2(0) ? .0 :
+    	-(mouse.x / resolution.x * 1.0 - .5) * PI;
     float z = 0.0;
-    //vec3 mouse = vec3(x,y,z);
-	ro = rotateZ(ro, z);   
-    ro = rotateX(ro, x);
-    ro = rotateY(ro, y);
 
+    ro.zy *= r2(x);
+    ro.zx *= r2(y);
+    
     return ro;
 }
   
